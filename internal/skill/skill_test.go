@@ -49,12 +49,12 @@ func TestEmbeddedKanbanMDHasReferences(t *testing.T) {
 
 func TestAgentRegistry(t *testing.T) {
 	agents := Agents()
-	if len(agents) != 4 {
-		t.Fatalf("Agents() returned %d, want 4", len(agents))
+	if len(agents) != 5 {
+		t.Fatalf("Agents() returned %d, want 5", len(agents))
 	}
 
 	names := AllAgentNames()
-	expected := [4]string{"claude", "codex", "cursor", "openclaw"}
+	expected := [5]string{"agy", "claude", "codex", "cursor", "openclaw"}
 	for i, want := range expected {
 		if names[i] != want {
 			t.Errorf("AllAgentNames()[%d] = %q, want %q", i, names[i], want)
@@ -72,6 +72,20 @@ func TestAgentByName(t *testing.T) {
 	}
 	if a.ProjectDir != ".claude/skills" {
 		t.Errorf("ProjectDir = %q, want %q", a.ProjectDir, ".claude/skills")
+	}
+
+	ag := AgentByName("agy")
+	if ag == nil {
+		t.Fatal("AgentByName(agy) = nil")
+	}
+	if ag.DisplayName != "Antigravity" {
+		t.Errorf("DisplayName = %q, want %q", ag.DisplayName, "Antigravity")
+	}
+	if ag.ProjectDir != ".agents/skills" {
+		t.Errorf("ProjectDir = %q, want %q", ag.ProjectDir, ".agents/skills")
+	}
+	if ag.GlobalDir != ".gemini/config/skills" {
+		t.Errorf("GlobalDir = %q, want %q", ag.GlobalDir, ".gemini/config/skills")
 	}
 
 	if AgentByName("nonexistent") != nil {
@@ -100,6 +114,27 @@ func TestDetectAgents(t *testing.T) {
 	}
 	if contains(names, "codex") {
 		t.Error("codex should not be detected without .agents/ dir")
+	}
+	if contains(names, "agy") {
+		t.Error("agy should not be detected without .agents/ dir")
+	}
+}
+
+func TestDetectAgents_Agy(t *testing.T) {
+	tmp := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmp, ".agents"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, a := range DetectAgents(tmp) {
+		names = append(names, a.Name)
+	}
+	// .agents/ is shared by agy and codex.
+	if !contains(names, "agy") {
+		t.Errorf("expected agy to be detected via .agents, got %v", names)
+	}
+	if !contains(names, "codex") {
+		t.Errorf("expected codex to be detected via .agents, got %v", names)
 	}
 }
 

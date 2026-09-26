@@ -746,8 +746,14 @@ Two skills are included:
 | **kanban-based-development** | Full autonomous development workflow — multi-agent claim semantics, git worktrees for isolation, and a strict status lifecycle (in-progress → review → done). |
 
 ```bash
-# Install skills for all detected agents (Claude Code, Codex, Cursor, OpenClaw)
+# Install skills for all detected agents (Antigravity, Claude Code, Codex, Cursor, OpenClaw)
 kanban-md skill install
+
+# Install skills for a specific agent (e.g. Antigravity)
+kanban-md skill install --agent agy
+
+# Install skills globally (e.g. ~/.gemini/config/skills for Antigravity)
+kanban-md skill install --agent agy --global
 
 # Check if installed skills are up to date
 kanban-md skill check
@@ -760,6 +766,16 @@ kanban-md skill show
 ```
 
 Skills are versioned to match the CLI. When you upgrade kanban-md, `skill check` tells you if your installed skills are outdated, and `skill update` brings them in sync.
+
+Supported agents and installation paths:
+
+| Agent | CLI Flag | Local Path | Global Path |
+|-------|----------|------------|-------------|
+| **Antigravity** | `--agent agy` | `.agents/skills/` | `~/.gemini/config/skills/` |
+| **Claude Code** | `--agent claude` | `.claude/skills/` | `~/.claude/skills/` |
+| **Codex** | `--agent codex` | `.agents/skills/` | `~/.codex/skills/` |
+| **Cursor** | `--agent cursor` | `.cursor/skills/` | `~/.cursor/skills/` |
+| **OpenClaw** | `--agent openclaw` | *(global only)* | `~/.openclaw/skills/` |
 
 ## Multi-agent workflow
 

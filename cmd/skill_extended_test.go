@@ -89,6 +89,19 @@ func TestResolveAgentList_MixedKnownUnknown(t *testing.T) {
 	}
 }
 
+func TestResolveAgentList_Agy(t *testing.T) {
+	agy := resolveAgentList([]string{"agy"})
+	if len(agy) != 1 {
+		t.Fatalf("len = %d, want 1", len(agy))
+	}
+	if agy[0].Name != "agy" {
+		t.Errorf("agent name = %q, want agy", agy[0].Name)
+	}
+	if agy[0].DisplayName != "Antigravity" {
+		t.Errorf("display name = %q, want Antigravity", agy[0].DisplayName)
+	}
+}
+
 // --- resolveSkills tests (with explicit filter) ---
 
 func newSkillCmd() *cobra.Command {

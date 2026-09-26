@@ -21,6 +21,12 @@ type Agent struct {
 // agents is the registry of supported AI coding agents.
 var agents = []Agent{
 	{
+		Name:        "agy",
+		DisplayName: "Antigravity",
+		ProjectDir:  ".agents/skills",
+		GlobalDir:   ".gemini/config/skills",
+	},
+	{
 		Name:        "claude",
 		DisplayName: "Claude Code",
 		ProjectDir:  ".claude/skills",

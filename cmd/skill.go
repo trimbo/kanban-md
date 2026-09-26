@@ -24,7 +24,7 @@ var skillCmd = &cobra.Command{
 var skillInstallCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install agent skills",
-	Long: `Installs kanban-md skills for AI coding agents (Claude Code, Codex, Cursor, OpenClaw).
+	Long: `Installs kanban-md skills for AI coding agents (Antigravity, Claude Code, Codex, Cursor, OpenClaw).
 In interactive mode, shows a multi-select menu for agents and skills.
 In non-interactive mode (piped/CI), installs all skills for all detected agents.`,
 	RunE: runSkillInstall,
@@ -52,7 +52,7 @@ var skillShowCmd = &cobra.Command{
 }
 
 func init() {
-	skillInstallCmd.Flags().StringSlice("agent", nil, "agent(s) to install for (claude, codex, cursor, openclaw)")
+	skillInstallCmd.Flags().StringSlice("agent", nil, "agent(s) to install for (agy, claude, codex, cursor, openclaw)")
 	skillInstallCmd.Flags().StringSlice("skill", nil, "skill(s) to install (kanban-md, kanban-based-development)")
 	skillInstallCmd.Flags().Bool("global", false, "install to user-level (global) skill directory")
 	skillInstallCmd.Flags().Bool("force", false, "overwrite existing skills without checking version")

@@ -17,8 +17,17 @@ import (
 // runKanbanNoDir runs the binary without the --dir flag (for skill commands).
 func runKanbanNoDir(t *testing.T, dir string, args ...string) result {
 	t.Helper()
+	return runKanbanNoDirEnv(t, dir, nil, args...)
+}
+
+// runKanbanNoDirEnv runs the binary without --dir, with extra environment variables.
+func runKanbanNoDirEnv(t *testing.T, dir string, env []string, args ...string) result {
+	t.Helper()
 	cmd := exec.Command(binPath, args...) //nolint:noctx,gosec // e2e test binary, args are test-controlled
 	cmd.Dir = dir
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -455,5 +464,71 @@ func TestSkillUpdateAllUpToDate(t *testing.T) {
 	}
 	if !strings.Contains(r.stdout, "All skills are already up to date.") {
 		t.Errorf("expected 'All skills are already up to date.' summary, got:\n%s", r.stdout)
+	}
+}
+
+func TestSkillInstallAgyLocal(t *testing.T) {
+	dir := t.TempDir()
+
+	// Install skills for agy locally.
+	r := runKanbanNoDir(t, dir, "skill", "install", "--agent", "agy")
+	if r.exitCode != 0 {
+		t.Fatalf("skill install for agy failed: %s", r.stderr)
+	}
+	if !strings.Contains(r.stdout, "SKILL.md") {
+		t.Errorf("expected file paths in output, got:\n%s", r.stdout)
+	}
+
+	// Verify .agents/skills/ directory contains both skills and references.
+	skillMD := filepath.Join(dir, ".agents", "skills", "kanban-md", "SKILL.md")
+	if _, err := os.Stat(skillMD); err != nil {
+		t.Errorf("kanban-md SKILL.md not created: %v", err)
+	}
+	devSkillMD := filepath.Join(dir, ".agents", "skills", "kanban-based-development", "SKILL.md")
+	if _, err := os.Stat(devSkillMD); err != nil {
+		t.Errorf("kanban-based-development SKILL.md not created: %v", err)
+	}
+	refPath := filepath.Join(dir, ".agents", "skills", "kanban-md", "references", "json-schemas.md")
+	if _, err := os.Stat(refPath); err != nil {
+		t.Errorf("references/json-schemas.md not created: %v", err)
+	}
+
+	// Run check — should be up to date.
+	r = runKanbanNoDir(t, dir, "skill", "check", "--agent", "agy")
+	if r.exitCode != 0 {
+		t.Errorf("skill check should pass (exit 0), got exit %d: %s", r.exitCode, r.stderr)
+	}
+	if !strings.Contains(r.stdout, "up to date") {
+		t.Errorf("expected 'up to date' in check output, got:\n%s", r.stdout)
+	}
+}
+
+func TestSkillInstallAgyGlobal(t *testing.T) {
+	dir := t.TempDir()
+	fakeHome := t.TempDir()
+
+	// Install globally for agy with HOME pointing to fakeHome.
+	r := runKanbanNoDirEnv(t, dir, []string{"HOME=" + fakeHome}, "skill", "install", "--agent", "agy", "--global")
+	if r.exitCode != 0 {
+		t.Fatalf("global install failed: %s", r.stderr)
+	}
+
+	// Should be installed to ~/.gemini/config/skills/kanban-md/SKILL.md.
+	globalSkillMD := filepath.Join(fakeHome, ".gemini", "config", "skills", "kanban-md", "SKILL.md")
+	if _, err := os.Stat(globalSkillMD); err != nil {
+		t.Errorf("global kanban-md SKILL.md not created at %s: %v", globalSkillMD, err)
+	}
+	globalDevSkillMD := filepath.Join(fakeHome, ".gemini", "config", "skills", "kanban-based-development", "SKILL.md")
+	if _, err := os.Stat(globalDevSkillMD); err != nil {
+		t.Errorf("global kanban-based-development SKILL.md not created: %v", err)
+	}
+
+	// Check global skill status.
+	r = runKanbanNoDirEnv(t, dir, []string{"HOME=" + fakeHome}, "skill", "check", "--agent", "agy", "--global")
+	if r.exitCode != 0 {
+		t.Errorf("global skill check failed: %s", r.stderr)
+	}
+	if !strings.Contains(r.stdout, "up to date") {
+		t.Errorf("expected 'up to date' in global check output, got:\n%s", r.stdout)
 	}
 }
